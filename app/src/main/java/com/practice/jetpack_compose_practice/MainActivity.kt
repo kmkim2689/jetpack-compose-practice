@@ -1,102 +1,98 @@
 package com.practice.jetpack_compose_practice
 
+import android.graphics.Paint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.sp
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            단순히 Snackbar만 선언해놓으면, 상단에 스낵바가 띄워지고 사라지지 않는다.
-//            하지만, 스낵바는 하단에 나타나고 일정 시간이 지나면 사라져야 함.
-//            Snackbar {
-//                Text(text = "Hello")
+            val scrollState = rememberScrollState()
+            // 방법1. Lazy Column을 사용하지 않고 반복되는 아이템에 대한 스크롤을 구현하는 방법
+            // 매우 비효율적
+//            Column(
+//                // Column에 이것을 작성해야 스크롤이 가능하다.
+//                // verticalscroll 인자들
+//                // 1. (scroll) state => 현재 scroll된 것에 관련한 state 관련 정보들을 담고 있음
+//                modifier = Modifier.verticalScroll(state = scrollState)
+//            ) {
+//                for (i in 1..50) {
+//                    Text(text = "Item $i", fontSize = 24.sp, fontWeight = FontWeight.Bold,
+//                        textAlign = TextAlign.Center,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(vertical = 24.dp)
+//                    )
+//                }
 //            }
 
-//            어디서 얼마나 스낵바가 띄워질지 결정하고 싶다면, Snackbar를 사용하여 세부사항을 설정하면 됨
-//            하지만, 보통 사용되는 스낵바처럼 동작하기를 원한다면, Scaffold라는 레이아웃을 사용하면 된다.
-//            Scaffold는 jetpack compose에서 이미 material design에서 존재하는 레이아웃 디자인들을 갖다가 쓸 수 있도록 함
-//            Topbar, toolbar, snackbar, navigation bar 등등 갖다 쓸 수 있다.
+            // 방법2. Lazy Column
+            // 기본적으로 그 자체로 scroll이 가능하기 때문에, verticalscroll을 둘 필요가 없다.
+            // 아이템 하나에 대한 반복문을 두어 블록 안에 추가할 필요가 없이, 이미 이러한 기능을 해주는 함수를 이용
+            // 그런 함수가 바로 item(단일항목만 그리려고 할 때) 혹은 items(여러 개의 항목을 그려야 할 때, recyclerview에 대응)
+            // 하지만 itemsIndexed 함수가 더욱 효율적임
+            LazyColumn() {
+//                items 함수의 인자
+//                1. count : 얼마나 많은 개수를 넣을 것인지
 
-            val scaffoldState = rememberScaffoldState()
-//            여기서 textFieldState의 자료형은 MutableState이기 때문에,
-//            만약 string값을 사용하고 싶다면 .value를 사용해야 한다.
-//            val textFieldState = remember {
-//                mutableStateOf("")
-//            }
-
-//            반면, by를 사용하고 var로 변경하면 자료형이 string이 된다. => delegation
-//            즉, 바로 변수 명으로 바로 문자열을 사용할 수 있다는 의미.
-//            여기서 이점이 존재함.
-            var textFieldState by remember {
-                mutableStateOf("")
-            }
-
-            val scope = rememberCoroutineScope()
-
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-//                scaffoldState : 스낵바를 이용하기 위하여 설정
-                scaffoldState = scaffoldState
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 30.dp)) {
-//                    textfield의 종류 : textfield, outlinedtextfield, basictextfield
-//                    textfield에 적힌 값을 사용하기 위해서는, state의 값과 연결해주는 것이 필요함.
-                    OutlinedTextField(value = textFieldState, label = {
-//                      hint를 여기서 정의하면 된다.
-                      Text("Enter your name")
-                    }, onValueChange = {
-//                        update state here
-                        textFieldState = it
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+//               itemsIndexed
+//               매개변수 : 리스트. 보여줄 데이터들에 대한 리스트. 데이터클래스 보통 사용함.
+                itemsIndexed(
+                    listOf("this", "is", "jt", "compose")
+                ) { index, string ->
+                    Text(text = "$string", fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = {
-                        // show snackbar
-                        scope.launch {
-                            scaffoldState.snackbarHostState.showSnackbar("Hello $textFieldState")
-                        }
-
-                    }) {
-                        Text(text = "Greet me!")
-                    }
                 }
 
+//                items() 이용하면 미리 count를 정해놓아야 함. 비효율적
+//                items(5000) {
+////                    블록 안에는 아이템 안에 들어갈 요소들을 넣으면 됨.
+////                    여기서 it을 호출하면 그것은 인덱스를 나타냄.
+//                    Text(text = "Item $it", fontSize = 24.sp, fontWeight = FontWeight.Bold,
+//                        textAlign = TextAlign.Center,
+//                        modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(vertical = 24.dp)
+//                    )
+//                }
             }
-
         }
     }
 }
-
 /*
-textfield : EditText 대신 사용
-어떻게 compose에서 snackbar를 보여주는가?
-그냥 Snackbar Composable를 사용하면 된다.
-Jetpack Compose에서 scope.launch {}는 코루틴을 생성하고 비동기 작업을 실행하는 데 사용됩니다.
-스낵바는 화면에 잠시 표시되고 사라지는 시간 제한이 있는 임시 메시지이므로,
-스낵바를 표시하는 동안 사용자 인터랙션을 차단하지 않고 비동기적으로 처리하는 것이 적합합니다.
+jetpack compose에서 recyclerview와 같은 기능을 구현하는 방법
+:LazyColumn 혹은 LazyRow를 사용하면 훨씬 간편하게 구현 가능
+LazyColumn : 여기서 Lazy라는 것은 Scroll되는 시점에서야 보여진다는 측면에서 사용되는 용어임.
 
-scope.launch {} 블록 내에서 스낵바를 표시하는 것은
-Scaffold 컴포넌트와 연결된 ScaffoldState에 접근하여 스낵바를 표시하기 위한 방법입니다.
- ScaffoldState는 스낵바와 같은 상태를 관리하는 데 사용되는 Compose의 내장 상태입니다.
- scaffoldState.snackbarHostState.showSnackbar() 메서드를 호출하여 스낵바를 표시할 수 있습니다.
 
-비동기적인 스낵바 표시를 위해 scope.launch {} 블록 내에서 스낵바를 표시하면, 코루틴을 통해 비동기 작업이 실행되고 화면에 스낵바가 표시됩니다. 이렇게하면 UI를 차단하지 않고 비동기 작업을 처리할 수 있으며, 사용자는 스낵바를 볼 수 있습니다.
+rememberScrollState는 Jetpack Compose에서 스크롤의 상태를 기억하고 관리하기 위해 사용되는 함수입니다. 스크롤 가능한 컴포넌트(예: LazyColumn, LazyRow, ScrollableColumn, ScrollableRow 등)와 함께 사용됩니다.
 
+rememberScrollState 함수는 스크롤의 현재 위치, 스크롤의 최소값 및 최대값, 스크롤 가능한 영역 등의 정보를 포함하는 ScrollState 객체를 생성합니다. 이 ScrollState 객체를 사용하여 스크롤을 제어하고 상태를 유지할 수 있습니다.
+
+주요 사용 사례는 다음과 같습니다:
+
+스크롤 위치 가져오기: scrollState.value를 통해 현재 스크롤 위치를 가져올 수 있습니다.
+스크롤 위치 설정: scrollState.scrollTo() 함수를 사용하여 스크롤 위치를 지정할 수 있습니다.
+스크롤 가능한 영역 제한: scrollState.minValue 및 scrollState.maxValue를 설정하여 스크롤 가능한 영역을 제한할 수 있습니다.
+스크롤 이벤트 처리: scrollState를 감시하고 변경에 따라 필요한 작업을 수행할 수 있습니다.
  */
