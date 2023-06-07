@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
                     // of parent(<= parent)
                     start.linkTo(parent.start)
 
+                    //a
                     // 너비와 높이도 설정 가능
                     // constraint layout내부의 뷰의 width, height 설정 가능
                     // 설정 : Dimension.단위
