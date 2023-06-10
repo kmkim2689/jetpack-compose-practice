@@ -43,11 +43,20 @@ class DefaultPaginator<Key, Item>(
         val result = onRequest(currentKey)
         // 네트워크 통신이 끝났으므로 다시 로딩 여부를 false로 만든다.
         isMakingRequest = false
+        val items = result.getOrElse {
+            onError(it)
+            // 다음에 또 써야하기 때문에 원상태로 돌려놓는다.
+            onLoadUpdated(false)
+            return
+        }
+        currentKey = getNextKey(items)
+        onSuccess(items, currentKey)
+        onLoadUpdated(false)
 
     }
 
     override fun reset() {
-
+        currentKey = initialKey
     }
 
 }
