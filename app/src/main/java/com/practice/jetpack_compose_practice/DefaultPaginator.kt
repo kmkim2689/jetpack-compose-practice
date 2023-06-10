@@ -5,7 +5,7 @@ class DefaultPaginator<Key, Item>(
     // paging을 위하여 필요한 값들과 메소드들
     // 1. initialKey : the initial page we want to start with.
     // 예컨대, 만약 1페이지까지 로드가 완료된 상태라면 다음으로는 2를 보내야 할 것임.
-    // 이 때, 2페이지를 불러오깅 위해 initialKey의 값은 2가 넘어오게 될 것이다.
+    // 이 때, 2페이지를 불러오기 위해 initialKey의 값은 2가 넘어오게 될 것이다.
     private val initialKey: Key,
     // 이하는 콜백 메소드임. 이 메소드들은 변할일이 없으므로 상수처럼 사용 가능
     // 따라서, inline 키워드를 이용하여 컴파일 시간에 특정 변수를 참조하지 않고 그 변수의 값을 직접 복사하여 즉각적인 값을 읽을 수 있도록 함
@@ -43,11 +43,20 @@ class DefaultPaginator<Key, Item>(
         val result = onRequest(currentKey)
         // 네트워크 통신이 끝났으므로 다시 로딩 여부를 false로 만든다.
         isMakingRequest = false
+        val items = result.getOrElse {
+            onError(it)
+            // 다음에 또 써야하기 때문에 원상태로 돌려놓는다.
+            onLoadUpdated(false)
+            return
+        }
+        currentKey = getNextKey(items)
+        onSuccess(items, currentKey)
+        onLoadUpdated(false)
 
     }
 
     override fun reset() {
-
+        currentKey = initialKey
     }
 
 }
